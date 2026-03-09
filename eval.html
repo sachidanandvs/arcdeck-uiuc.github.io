@@ -18,7 +18,7 @@ body {
   line-height: 1.7;
 }
 .page-container {
-  max-width: 1300px;
+  max-width: 100%;
   margin: 0 auto;
   background: #fff;
   box-shadow: 0 0 40px rgba(0,0,0,0.08);
@@ -201,8 +201,86 @@ body {
 .slide-label.label-c { color: #059669; }
 .slide-col iframe {
   width: 100%;
-  height: 500px;
+  height: 80vh;
   border: none;
+}
+
+/* Expand button */
+.expand-btn {
+  display: block;
+  margin: 0 auto;
+  padding: 6px 16px;
+  background: white;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.expand-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+/* Fullscreen modal for expanded slide */
+.slide-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+}
+.slide-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  width: 100%;
+  max-width: 1100px;
+}
+.slide-modal-tabs {
+  display: flex;
+  gap: 4px;
+}
+.slide-modal-tab {
+  padding: 8px 24px;
+  border: none;
+  border-radius: 8px 8px 0 0;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.7);
+  transition: all 0.15s;
+}
+.slide-modal-tab.active { background: white; color: #1e293b; }
+.slide-modal-tab.tab-a.active { color: #dc2626; }
+.slide-modal-tab.tab-b.active { color: #2563eb; }
+.slide-modal-tab.tab-c.active { color: #059669; }
+.slide-modal-close {
+  margin-left: auto;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.slide-modal-close:hover { background: rgba(255,255,255,0.3); }
+.slide-modal iframe {
+  width: 100%;
+  max-width: 1100px;
+  flex: 1;
+  border: none;
+  border-radius: 0 8px 8px 8px;
+  background: white;
 }
 
 /* Ranking */
@@ -464,14 +542,17 @@ function selectTopic(topic) {
         <div class="slide-col">
           <div class="slide-label label-a">Slide A</div>
           <iframe src="${basePath}/A_${paper}.pdf"></iframe>
+          <button class="expand-btn" onclick="openSlideModal('${basePath}','${paper}','A')">Expand</button>
         </div>
         <div class="slide-col">
           <div class="slide-label label-b">Slide B</div>
           <iframe src="${basePath}/B_${paper}.pdf"></iframe>
+          <button class="expand-btn" onclick="openSlideModal('${basePath}','${paper}','B')">Expand</button>
         </div>
         <div class="slide-col">
           <div class="slide-label label-c">Slide C</div>
           <iframe src="${basePath}/C_${paper}.pdf"></iframe>
+          <button class="expand-btn" onclick="openSlideModal('${basePath}','${paper}','C')">Expand</button>
         </div>
       </div>
       <div class="ranking-area">
@@ -555,6 +636,37 @@ function showToast(message, type) {
   toast.textContent = message;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 4000);
+}
+
+function openSlideModal(basePath, paper, activeTab) {
+  const modal = document.createElement('div');
+  modal.className = 'slide-modal';
+  const tabs = ['A','B','C'];
+  const tabColors = { A: 'tab-a', B: 'tab-b', C: 'tab-c' };
+  const src = `${basePath}/${activeTab}_${paper}.pdf`;
+
+  modal.innerHTML = `
+    <div class="slide-modal-header">
+      <div class="slide-modal-tabs">
+        ${tabs.map(t => `<button class="slide-modal-tab ${tabColors[t]} ${t === activeTab ? 'active' : ''}"
+          onclick="switchModalTab(this,'${basePath}','${paper}','${t}')">${t}</button>`).join('')}
+      </div>
+      <button class="slide-modal-close" onclick="this.closest('.slide-modal').remove()">Close (Esc)</button>
+    </div>
+    <iframe src="${src}"></iframe>`;
+  document.body.appendChild(modal);
+
+  const handler = (e) => {
+    if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', handler); }
+  };
+  document.addEventListener('keydown', handler);
+}
+
+function switchModalTab(btn, basePath, paper, tab) {
+  const modal = btn.closest('.slide-modal');
+  modal.querySelectorAll('.slide-modal-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  modal.querySelector('iframe').src = `${basePath}/${tab}_${paper}.pdf`;
 }
 
 async function submitResults() {
