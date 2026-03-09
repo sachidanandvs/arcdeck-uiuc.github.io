@@ -421,8 +421,17 @@ body {
 <div class="content">
 
   <div class="evaluator-section">
-    <label for="evaluator-name">Your Name:</label>
-    <input type="text" id="evaluator-name" placeholder="e.g. John Doe" oninput="checkAllComplete()">
+    <label for="evaluator-name">Nickname:</label>
+    <input type="text" id="evaluator-name" placeholder="e.g. slide_fan_99" oninput="checkAllComplete()">
+  </div>
+
+  <div class="evaluator-section">
+    <label>Academic Status:</label>
+    <select id="academic-status" onchange="checkAllComplete()" style="padding:10px 16px;border:2px solid #cbd5e1;border-radius:8px;font-size:1rem;font-family:inherit;width:300px;">
+      <option value="">-- Select --</option>
+      <option value="undergraduate">Undergraduate</option>
+      <option value="ms_phd">MS / PhD Student</option>
+    </select>
   </div>
 
   <div class="instructions">
@@ -481,7 +490,7 @@ body {
 <script>
 // ============================================================
 // IMPORTANT: Replace this with your deployed Google Apps Script URL
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxONKquyY2J6mFJfGJkwJpFsR-YP4yX-8bGE2vTjFf4UspHhflrvUqVoZlTyWq1-ukurA/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwpAhG13NacZyMtF1Y0nYcEPsQJ_oChDZ-XkMBudrI2fpce1aAiyW9z1WnuX5jvKOVaoA/exec';
 // ============================================================
 
 const topicPapers = {
@@ -620,8 +629,9 @@ function setRank(paper, label, value) {
 function checkAllComplete() {
   if (!currentTopic) return;
   const name = document.getElementById('evaluator-name').value.trim();
+  const status = document.getElementById('academic-status').value;
   const papers = topicPapers[currentTopic];
-  const allDone = name.length > 0 && papers.every(p => {
+  const allDone = name.length > 0 && status !== '' && papers.every(p => {
     const r = rankings[p];
     if (!r) return false;
     const vals = Object.values(r).filter(v => v !== '');
@@ -675,11 +685,13 @@ async function submitResults() {
   btn.textContent = 'Submitting...';
 
   const evaluator = document.getElementById('evaluator-name').value.trim();
+  const academicStatus = document.getElementById('academic-status').value;
   const papers = topicPapers[currentTopic];
 
   // Build rows: one row per paper
   const rows = papers.map(paper => ({
     evaluator,
+    academic_status: academicStatus,
     topic: currentTopic,
     paper,
     rank_A: rankings[paper].A,
