@@ -1,19 +1,22 @@
 // =====================================================
-// Google Apps Script - Google Sheets에 붙여넣기
+// Google Apps Script - paste into the linked Google Sheet
 // =====================================================
 //
-// 셋업 방법:
-// 1. Google Sheets 새로 만들기
-// 2. 첫 번째 행(헤더)에 다음 입력:
-//    A1: timestamp | B1: evaluator | C1: academic_status | D1: topic | E1: paper | F1: rank_A | G1: rank_B | H1: rank_C
-// 3. Extensions > Apps Script 클릭
-// 4. 기본 코드 지우고 아래 전체 복사 붙여넣기
+// Setup:
+// 1. Create a new Google Sheet
+// 2. In row 1, add these headers (in order):
+//    A1: timestamp | B1: evaluator | C1: academic_status | D1: topic |
+//    E1: paper | F1: criterion | G1: rank_A | H1: rank_B | I1: rank_C
+// 3. Extensions > Apps Script
+// 4. Replace the default code with this file's contents
 // 5. Deploy > New deployment
 //    - Type: Web app
 //    - Execute as: Me
 //    - Who has access: Anyone
-// 6. Deploy 누르고 URL 복사
-// 7. eval.html의 APPS_SCRIPT_URL에 그 URL 붙여넣기
+// 6. Copy the deployment URL into APPS_SCRIPT_URL in index.html
+//
+// criterion values: logical_progression | cross_slide_coherence |
+//                   global_coherence | technical_depth | visuals
 // =====================================================
 
 function doPost(e) {
@@ -28,6 +31,7 @@ function doPost(e) {
       row.academic_status,
       row.topic,
       row.paper,
+      row.criterion,
       row.rank_A,
       row.rank_B,
       row.rank_C

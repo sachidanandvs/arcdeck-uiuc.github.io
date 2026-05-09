@@ -288,10 +288,21 @@ body {
   padding: 20px 28px;
   background: #fafbfc;
   border-top: 1px solid #e2e8f0;
+}
+.criterion-row {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
   flex-wrap: wrap;
+  padding: 10px 0;
+  border-bottom: 1px dashed #e2e8f0;
+}
+.criterion-row:last-child { border-bottom: none; }
+.criterion-name {
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 0.95rem;
+  min-width: 200px;
 }
 .ranking-area label {
   font-weight: 600;
@@ -451,13 +462,21 @@ body {
   </div>
 
   <div class="instructions">
-    <h3>Narrative Flow &mdash; Evaluation Criteria</h3>
-    <p style="margin:0 0 12px;color:#475569;font-size:0.9rem;">When ranking slide decks, please prioritize the following criteria:</p>
-    <ol>
-      <li><strong>Concrete Opening</strong> &mdash; Does the deck begin with a clear, specific problem rather than vague motivation?</li>
+    <h3>Evaluation Criteria</h3>
+    <p style="margin:0 0 12px;color:#475569;font-size:0.9rem;">For each paper, rank the three slide decks (A, B, C) on <strong>each</strong> of the five criteria below.</p>
+    <p style="margin:16px 0 6px;font-weight:700;color:#1e40af;">Narrative Flow</p>
+    <ol style="margin-top:0;">
       <li><strong>Logical Progression</strong> &mdash; Does it follow a coherent structure (problem &rarr; method &rarr; evidence) without front-loading technical details?</li>
       <li><strong>Cross-Slide Coherence</strong> &mdash; Do slides explicitly build on earlier ones, with clear logical transitions?</li>
-      <li><strong>Technical Depth</strong> &mdash; Does it include concrete technical substance (method details, experimental validation), rather than only high-level summaries?</li>
+      <li><strong>Global Coherence</strong> &mdash; Do all slides support one unified narrative of explaining a paper?</li>
+    </ol>
+    <p style="margin:16px 0 6px;font-weight:700;color:#1e40af;">Content</p>
+    <ol start="4" style="margin-top:0;">
+      <li><strong>Technical Depth</strong> &mdash; Does it include concrete technical substance (method details, experimental validation), rather than a few bullet-point summaries?</li>
+    </ol>
+    <p style="margin:16px 0 6px;font-weight:700;color:#1e40af;">Visuals</p>
+    <ol start="5" style="margin-top:0;">
+      <li><strong>Visuals</strong> &mdash; Do the slides have enough figures and text formatting (colors, bold) to make the slide visually stunning?</li>
     </ol>
   </div>
 
@@ -506,7 +525,7 @@ body {
 <script>
 // ============================================================
 // IMPORTANT: Replace this with your deployed Google Apps Script URL
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwpAhG13NacZyMtF1Y0nYcEPsQJ_oChDZ-XkMBudrI2fpce1aAiyW9z1WnuX5jvKOVaoA/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1WjD_MCPh3qgwMgwlyK5A2tKc20t1XiU8mD5vp4N-vidxCyIc_Z9epgIWqlJeFaguKw/exec';
 // ============================================================
 
 const topicPapers = {
@@ -535,6 +554,14 @@ const topicPapers = {
 
 let currentTopic = null;
 const rankings = {};
+
+const CRITERIA = [
+  { key: 'logical_progression',   name: 'Logical Progression' },
+  { key: 'cross_slide_coherence', name: 'Cross-Slide Coherence' },
+  { key: 'global_coherence',      name: 'Global Coherence' },
+  { key: 'technical_depth',       name: 'Technical Depth' },
+  { key: 'visuals',               name: 'Visuals' }
+];
 
 const paperLinks = {
   "Adversarial_Robustification_via_Text-to-Image_Diffusion_Models_ECCV_2024": "https://arxiv.org/abs/2407.18658",
@@ -573,7 +600,41 @@ function selectTopic(topic) {
 
   papers.forEach((paper, i) => {
     const basePath = `slide_list/${topic}/${paper}`;
-    rankings[paper] = { A: '', B: '', C: '' };
+    rankings[paper] = {};
+    CRITERIA.forEach(c => { rankings[paper][c.key] = { A: '', B: '', C: '' }; });
+
+    const criteriaRows = CRITERIA.map(c => `
+        <div class="criterion-row">
+          <span class="criterion-name">${c.name}</span>
+          <div class="rank-group">
+            <span class="rank-label rank-label-a">A</span>
+            <select onchange="setRank('${paper}','${c.key}','A',this.value)">
+              <option value="">--</option>
+              <option value="1">1 (Best)</option>
+              <option value="2">2</option>
+              <option value="3">3 (Worst)</option>
+            </select>
+          </div>
+          <div class="rank-group">
+            <span class="rank-label rank-label-b">B</span>
+            <select onchange="setRank('${paper}','${c.key}','B',this.value)">
+              <option value="">--</option>
+              <option value="1">1 (Best)</option>
+              <option value="2">2</option>
+              <option value="3">3 (Worst)</option>
+            </select>
+          </div>
+          <div class="rank-group">
+            <span class="rank-label rank-label-c">C</span>
+            <select onchange="setRank('${paper}','${c.key}','C',this.value)">
+              <option value="">--</option>
+              <option value="1">1 (Best)</option>
+              <option value="2">2</option>
+              <option value="3">3 (Worst)</option>
+            </select>
+          </div>
+          <span class="rank-status incomplete" id="status-${i}-${c.key}">Incomplete</span>
+        </div>`).join('');
 
     html += `
     <div class="paper-block" id="paper-${i}">
@@ -600,35 +661,7 @@ function selectTopic(topic) {
         </div>
       </div>
       <div class="ranking-area">
-        <label>Rank:</label>
-        <div class="rank-group">
-          <span class="rank-label rank-label-a">A</span>
-          <select onchange="setRank('${paper}','A',this.value)">
-            <option value="">--</option>
-            <option value="1">1 (Best)</option>
-            <option value="2">2</option>
-            <option value="3">3 (Worst)</option>
-          </select>
-        </div>
-        <div class="rank-group">
-          <span class="rank-label rank-label-b">B</span>
-          <select onchange="setRank('${paper}','B',this.value)">
-            <option value="">--</option>
-            <option value="1">1 (Best)</option>
-            <option value="2">2</option>
-            <option value="3">3 (Worst)</option>
-          </select>
-        </div>
-        <div class="rank-group">
-          <span class="rank-label rank-label-c">C</span>
-          <select onchange="setRank('${paper}','C',this.value)">
-            <option value="">--</option>
-            <option value="1">1 (Best)</option>
-            <option value="2">2</option>
-            <option value="3">3 (Worst)</option>
-          </select>
-        </div>
-        <span class="rank-status incomplete" id="status-${i}">Incomplete</span>
+        ${criteriaRows}
       </div>
     </div>`;
   });
@@ -639,26 +672,31 @@ function selectTopic(topic) {
   checkAllComplete();
 }
 
-function setRank(paper, label, value) {
-  rankings[paper][label] = value;
+function setRank(paper, criterion, label, value) {
+  rankings[paper][criterion][label] = value;
 
-  const vals = Object.values(rankings[paper]).filter(v => v !== '');
+  const vals = Object.values(rankings[paper][criterion]).filter(v => v !== '');
   const hasDuplicates = new Set(vals).size !== vals.length;
   if (hasDuplicates && value !== '') {
-    alert('Each rank (1, 2, 3) must be used exactly once per paper.');
-    rankings[paper][label] = '';
+    alert('Each rank (1, 2, 3) must be used exactly once per criterion.');
+    rankings[paper][criterion][label] = '';
     event.target.value = '';
     return;
   }
 
   const papers = topicPapers[currentTopic];
   const idx = papers.indexOf(paper);
-  const statusEl = document.getElementById(`status-${idx}`);
+  const statusEl = document.getElementById(`status-${idx}-${criterion}`);
   const complete = vals.length === 3 && !hasDuplicates;
   statusEl.textContent = complete ? 'Complete' : 'Incomplete';
   statusEl.className = 'rank-status ' + (complete ? 'complete' : 'incomplete');
 
   checkAllComplete();
+}
+
+function isCriterionComplete(r) {
+  const vals = Object.values(r).filter(v => v !== '');
+  return vals.length === 3 && new Set(vals).size === 3;
 }
 
 function checkAllComplete() {
@@ -669,8 +707,7 @@ function checkAllComplete() {
   const allDone = name.length > 0 && status !== '' && papers.every(p => {
     const r = rankings[p];
     if (!r) return false;
-    const vals = Object.values(r).filter(v => v !== '');
-    return vals.length === 3 && new Set(vals).size === 3;
+    return CRITERIA.every(c => isCriterionComplete(r[c.key]));
   });
   document.getElementById('submit-btn').disabled = !allDone;
 }
@@ -723,17 +760,24 @@ async function submitResults() {
   const academicStatus = document.getElementById('academic-status').value;
   const papers = topicPapers[currentTopic];
 
-  // Build rows: one row per paper
-  const rows = papers.map(paper => ({
-    evaluator,
-    academic_status: academicStatus,
-    topic: currentTopic,
-    paper,
-    rank_A: rankings[paper].A,
-    rank_B: rankings[paper].B,
-    rank_C: rankings[paper].C,
-    timestamp: new Date().toISOString()
-  }));
+  // Build rows: one row per (paper, criterion)
+  const ts = new Date().toISOString();
+  const rows = [];
+  papers.forEach(paper => {
+    CRITERIA.forEach(c => {
+      rows.push({
+        evaluator,
+        academic_status: academicStatus,
+        topic: currentTopic,
+        paper,
+        criterion: c.key,
+        rank_A: rankings[paper][c.key].A,
+        rank_B: rankings[paper][c.key].B,
+        rank_C: rankings[paper][c.key].C,
+        timestamp: ts
+      });
+    });
+  });
 
   try {
     const res = await fetch(APPS_SCRIPT_URL, {
