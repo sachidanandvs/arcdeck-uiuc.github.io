@@ -152,12 +152,12 @@ body {
   margin-bottom: 56px;
   border: 1px solid #e2e8f0;
   border-radius: 16px;
-  overflow: hidden;
 }
 .paper-header {
   background: #f8fafc;
   padding: 20px 28px;
   border-bottom: 1px solid #e2e8f0;
+  border-radius: 16px 16px 0 0;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -291,6 +291,9 @@ body {
   padding: 20px 28px;
   background: #fafbfc;
   border-top: 1px solid #e2e8f0;
+  border-radius: 0 0 16px 16px;
+  position: relative;
+  overflow: visible;
 }
 .criterion-row {
   display: flex;
@@ -325,6 +328,60 @@ body {
 .rank-label-a { color: #dc2626; }
 .rank-label-b { color: #2563eb; }
 .rank-label-c { color: #059669; }
+.rank-dropdown {
+  position: relative;
+  display: inline-block;
+}
+.rank-trigger {
+  padding: 6px 14px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: white;
+  cursor: pointer;
+  min-width: 90px;
+  text-align: center;
+  font-weight: 600;
+  color: #94a3b8;
+  user-select: none;
+  transition: all 0.15s;
+}
+.rank-trigger.selected {
+  color: #0f172a;
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+.rank-dropdown.open .rank-trigger,
+.rank-dropdown:hover .rank-trigger {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+.rank-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1.5px solid #2563eb;
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  display: none;
+  z-index: 60;
+  overflow: hidden;
+}
+.rank-dropdown.open .rank-options { display: block; }
+.rank-option {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+  text-align: center;
+  transition: background 0.1s;
+}
+.rank-option:hover { background: #dbeafe; color: #1e40af; }
 .rank-group select {
   padding: 6px 12px;
   border: 1.5px solid #cbd5e1;
@@ -608,35 +665,30 @@ function selectTopic(topic) {
     rankings[paper] = {};
     CRITERIA.forEach(c => { rankings[paper][c.key] = { A: '', B: '', C: '' }; });
 
+    const rankDropdown = (cKey, label) => `
+          <div class="rank-dropdown">
+            <div class="rank-trigger">--</div>
+            <div class="rank-options">
+              <div class="rank-option" onclick="pickRank(this,'${paper}','${cKey}','${label}','')">--</div>
+              <div class="rank-option" onclick="pickRank(this,'${paper}','${cKey}','${label}','1')">1 (Best)</div>
+              <div class="rank-option" onclick="pickRank(this,'${paper}','${cKey}','${label}','2')">2</div>
+              <div class="rank-option" onclick="pickRank(this,'${paper}','${cKey}','${label}','3')">3 (Worst)</div>
+            </div>
+          </div>`;
     const criteriaRows = CRITERIA.map(c => `
         <div class="criterion-row">
           <span class="criterion-name">${c.name}</span>
           <div class="rank-group">
             <span class="rank-label rank-label-a">A</span>
-            <select onchange="setRank('${paper}','${c.key}','A',this.value)">
-              <option value="">--</option>
-              <option value="1">1 (Best)</option>
-              <option value="2">2</option>
-              <option value="3">3 (Worst)</option>
-            </select>
+            ${rankDropdown(c.key, 'A')}
           </div>
           <div class="rank-group">
             <span class="rank-label rank-label-b">B</span>
-            <select onchange="setRank('${paper}','${c.key}','B',this.value)">
-              <option value="">--</option>
-              <option value="1">1 (Best)</option>
-              <option value="2">2</option>
-              <option value="3">3 (Worst)</option>
-            </select>
+            ${rankDropdown(c.key, 'B')}
           </div>
           <div class="rank-group">
             <span class="rank-label rank-label-c">C</span>
-            <select onchange="setRank('${paper}','${c.key}','C',this.value)">
-              <option value="">--</option>
-              <option value="1">1 (Best)</option>
-              <option value="2">2</option>
-              <option value="3">3 (Worst)</option>
-            </select>
+            ${rankDropdown(c.key, 'C')}
           </div>
           <span class="rank-status incomplete" id="status-${i}-${c.key}">Incomplete</span>
         </div>`).join('');
@@ -677,17 +729,48 @@ function selectTopic(topic) {
   checkAllComplete();
 }
 
-function setRank(paper, criterion, label, value) {
+const RANK_LABEL = { '1': '1 (Best)', '2': '2', '3': '3 (Worst)' };
+const HOVER_CLOSE_DELAY = 350;
+const dropdownTimers = new WeakMap();
+
+document.addEventListener('mouseover', (e) => {
+  const dd = e.target.closest('.rank-dropdown');
+  if (!dd) return;
+  const t = dropdownTimers.get(dd);
+  if (t) { clearTimeout(t); dropdownTimers.delete(dd); }
+  document.querySelectorAll('.rank-dropdown.open').forEach(o => {
+    if (o !== dd) o.classList.remove('open');
+  });
+  dd.classList.add('open');
+});
+
+document.addEventListener('mouseout', (e) => {
+  const dd = e.target.closest('.rank-dropdown');
+  if (!dd) return;
+  if (dd.contains(e.relatedTarget)) return;
+  const t = setTimeout(() => dd.classList.remove('open'), HOVER_CLOSE_DELAY);
+  dropdownTimers.set(dd, t);
+});
+
+function pickRank(optionEl, paper, criterion, label, value) {
+  const dropdown = optionEl.closest('.rank-dropdown');
+  const prev = rankings[paper][criterion][label];
   rankings[paper][criterion][label] = value;
 
   const vals = Object.values(rankings[paper][criterion]).filter(v => v !== '');
   const hasDuplicates = new Set(vals).size !== vals.length;
   if (hasDuplicates && value !== '') {
     alert('Each rank (1, 2, 3) must be used exactly once per criterion.');
-    rankings[paper][criterion][label] = '';
-    event.target.value = '';
+    rankings[paper][criterion][label] = prev;
+    optionEl.blur();
     return;
   }
+
+  const trigger = dropdown.querySelector('.rank-trigger');
+  trigger.textContent = RANK_LABEL[value] || '--';
+  trigger.classList.toggle('selected', value !== '');
+  dropdown.classList.remove('open');
+  optionEl.blur();
 
   const papers = topicPapers[currentTopic];
   const idx = papers.indexOf(paper);
