@@ -1,6 +1,6 @@
 {
   "set1": {
-    "labels": {"C": "ours_human_study", "B": "pptagent_template_gpt5", "A": "slidegen_gpt5"},
+    "labels": {"C": "ours_human_study", "B": "autoslides", "A": "slidegen_gpt5", "D": "paper2video"},
     "papers": [
       "Adversarial_Robustification_via_Text-to-Image_Diffusion_Models_ECCV_2024",
       "Candidate_Pseudolabel_Learning_-_Enhancing_Vision-Language_Models_by_ICML_2024",
@@ -8,7 +8,7 @@
     ]
   },
   "set2": {
-    "labels": {"B": "ours_human_study", "C": "pptagent_template_gpt5", "A": "slidegen_gpt5"},
+    "labels": {"B": "ours_human_study", "C": "paper2video", "A": "slidegen_gpt5", "D": "autoslides"},
     "papers": [
       "Diffusion_Prior-Based_Amortized_Variational_Inference_for_Noisy_Inverse_Problems_ECCV_2024",
       "Can_MLLMs_Reason_in_Multimodality_ICML_2025",
@@ -16,7 +16,7 @@
     ]
   },
   "set3": {
-    "labels": {"A": "ours_human_study", "C": "pptagent_template_gpt5", "B": "slidegen_gpt5"},
+    "labels": {"A": "ours_human_study", "C": "paper2video", "B": "slidegen_gpt5", "D": "autoslides"},
     "papers": [
       "IMPROVING_PROBABILISTIC_DIFFUSION_MODELS_WITH_ICLR_2025",
       "Parrot_Captions_Teach_CLIP_to_Spot_Text_ECCV_2024",
@@ -24,7 +24,7 @@
     ]
   },
   "set4": {
-    "labels": {"C": "ours_human_study", "A": "pptagent_template_gpt5", "B": "slidegen_gpt5"},
+    "labels": {"C": "ours_human_study", "A": "autoslides", "B": "slidegen_gpt5", "D": "paper2video"},
     "papers": [
       "TOWARD_GUIDANCE_-F_REE_AR_V_ISUAL_GENERATION_ICLR_2025",
       "MMBENCH__Is_Your_Multi-Modal_Model_an_All-around_Player__ECCV_2024",
@@ -32,7 +32,7 @@
     ]
   },
   "set5": {
-    "labels": {"A": "ours_human_study", "B": "pptagent_template_gpt5", "C": "slidegen_gpt5"},
+    "labels": {"A": "ours_human_study", "B": "paper2video", "C": "slidegen_gpt5", "D": "autoslides"},
     "papers": [
       "Refining_Generative_Process_with_Discriminator_Guidance_ICML_2023",
       "Video-of-Thought_-_Step-by-Step_Video_Reasoning_from_Perception_to_Cognition_ICML_2024",
