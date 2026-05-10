@@ -16,7 +16,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-RANK_TO_SCORE = {"1": 4, "2": 3, "3": 2, "4": 1}
+RANK_TO_SCORE = {"1": 5, "2": 4, "3": 3, "4": 2, "5": 1}
 HERE = Path(__file__).resolve().parent
 
 
@@ -44,7 +44,7 @@ def aggregate(csv_path: Path, paper_to_labels: dict):
                 print(f"WARN: no label mapping for paper {paper!r}; skipping",
                       file=sys.stderr)
                 continue
-            for col in ("rank_A", "rank_B", "rank_C", "rank_D"):
+            for col in ("rank_A", "rank_B", "rank_C", "rank_D", "rank_E"):
                 rank = (row.get(col) or "").strip()
                 if rank not in RANK_TO_SCORE:
                     continue

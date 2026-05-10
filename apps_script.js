@@ -6,7 +6,7 @@
 // 1. Create a new Google Sheet
 // 2. In row 1, add these headers (in order):
 //    A1: timestamp | B1: evaluator | C1: academic_status | D1: topic |
-//    E1: paper | F1: criterion | G1: rank_A | H1: rank_B | I1: rank_C | J1: rank_D
+//    E1: paper | F1: criterion | G1: rank_A | H1: rank_B | I1: rank_C | J1: rank_D | K1: rank_E
 // 3. Extensions > Apps Script
 // 4. Replace the default code with this file's contents
 // 5. Deploy > New deployment
@@ -35,7 +35,8 @@ function doPost(e) {
       row.rank_A,
       row.rank_B,
       row.rank_C,
-      row.rank_D
+      row.rank_D,
+      row.rank_E
     ]);
   });
 
